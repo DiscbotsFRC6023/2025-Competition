@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
@@ -22,6 +23,8 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -50,6 +53,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
     private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
     private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
+
+    private final Vision s_vision = new Vision();
+    private Optional<Pose2d> estimatedVisionPose;
+
+    private final Field2d field = new Field2d();
 
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
@@ -159,6 +167,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 },
                 this // Reference to this subsystem to set requirements
         );
+        
+        SmartDashboard.putData("Field", field);
     }
 
     public Pose2d getPose(){
@@ -170,9 +180,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public void driveRobotRelative(ChassisSpeeds speeds){
-        /* SwerveRequest.ApplyRobotSpeeds autonRequest = new ApplyRobotSpeeds();
-        this.applyRequest(() -> autonRequest.withSpeeds(speeds)); */
-
         SwerveRequest.RobotCentric autonRequest = new SwerveRequest.RobotCentric();
 
         autonRequest = autonRequest
@@ -292,6 +299,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 m_hasAppliedOperatorPerspective = true;
             });
         }
+
+        estimatedVisionPose = s_vision.getEstimatedGlobalPose(getPose());
+        if(estimatedVisionPose.isPresent()){
+            this.addVisionMeasurement(estimatedVisionPose.get(), s_vision.poseTimestamp);
+        }
+
+        field.setRobotPose(getPose());
+        SmartDashboard.putBoolean("Has tag", s_vision.hasTarget);
     }
 
     private void startSimThread() {

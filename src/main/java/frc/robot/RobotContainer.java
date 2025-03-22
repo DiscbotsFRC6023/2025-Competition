@@ -5,29 +5,21 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
-
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.auto.AutoBuilderException;
-import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.auto.*;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
-import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import frc.robot.commands.Helpers.IntakeCoral;
-import frc.robot.commands.Helpers.Score;
+import frc.robot.commands.Helpers.*;
 import frc.robot.commands.Sequentials.*;
 import frc.robot.subsystems.*;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-
 import frc.robot.generated.TunerConstants;
 
 public class RobotContainer {
@@ -42,13 +34,15 @@ public class RobotContainer {
     private final Telemetry logger = new Telemetry(MaxSpeed);
     private final CommandXboxController joystick = new CommandXboxController(0);
     private final XboxController controller = new XboxController(1);
-    public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
     public SendableChooser<Command> autonChooser;
 
 
     private Manipulator s_manipulator = new Manipulator();
     private Elevator s_elevator = new Elevator();
     private Wrist s_wrist = new Wrist();
+    private Vision s_vision = new Vision();
+    public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+
     private JoystickButton a = new JoystickButton(controller, XboxController.Button.kA.value);
     private JoystickButton x = new JoystickButton(controller, XboxController.Button.kX.value);
     private JoystickButton b = new JoystickButton(controller, XboxController.Button.kB.value);
@@ -61,11 +55,7 @@ public class RobotContainer {
     public RobotContainer() {
         CameraServer.startAutomaticCapture();
         configureBindings();
-
-        NamedCommands.registerCommand("Home", new Home(s_elevator, s_manipulator, s_wrist));
-        NamedCommands.registerCommand("L2", new L2(s_elevator, s_manipulator, s_wrist));
-        NamedCommands.registerCommand("L3", new MidL3Combo(s_elevator, s_manipulator, s_wrist));
-        NamedCommands.registerCommand("Score", new Score(s_manipulator));
+        registerCommands();     
 
         autonChooser = AutoBuilder.buildAutoChooser();
         SmartDashboard.putData("Auto Chooser:", autonChooser);
@@ -153,6 +143,13 @@ public class RobotContainer {
         joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
         drivetrain.registerTelemetry(logger::telemeterize);
+    }
+
+    void registerCommands(){
+      NamedCommands.registerCommand("Home", new Home(s_elevator, s_manipulator, s_wrist));
+      NamedCommands.registerCommand("L2", new L2(s_elevator, s_manipulator, s_wrist));
+      NamedCommands.registerCommand("L3", new MidL3Combo(s_elevator, s_manipulator, s_wrist));
+      NamedCommands.registerCommand("Score", new Score(s_manipulator));
     }
 
     public Command getAutonomousCommand() {

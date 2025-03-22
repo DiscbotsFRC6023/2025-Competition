@@ -4,51 +4,37 @@
 
 package frc.robot.commands.Helpers;
 
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.Elevator;
+import frc.robot.subsystems.*;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
-public class setElevatorPOS extends Command {
-  /** Creates a new setElevatorPOS. */
-  public double targetPos = 0.0;
-  Elevator s_elevator;
-  boolean finished = false;
-  Timer settlingTime = new Timer();
+public class DriveToPose extends Command {
+  /** Creates a new DriveToPose. */
+  private CommandSwerveDrivetrain s_swerve;
+  private Vision s_vision;
 
-  public setElevatorPOS(Elevator s_elevator, double tar) {
+  public DriveToPose(CommandSwerveDrivetrain s_swerve, Vision s_vision) {
     // Use addRequirements() here to declare subsystem dependencies.
-    this.s_elevator = s_elevator;
-    targetPos = tar;
+    this.s_swerve = s_swerve;
+    this.s_vision = s_vision;
+    addRequirements(s_swerve, s_vision);
   }
 
   // Called when the command is initially scheduled.
   @Override
-  public void initialize() {
-    settlingTime.reset();
-    settlingTime.start();
-  }
+  public void initialize() {}
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
-  public void execute() {
-    if(s_elevator.getLiftPosition() == targetPos){
-      finished = true;
-    } else {
-      s_elevator.goToSetpoint(targetPos);
-    }
-  }
+  public void execute() {}
 
   // Called once the command ends or is interrupted.
   @Override
-  public void end(boolean interrupted) {
-    //s_elevator.hold();
-  }
+  public void end(boolean interrupted) {}
 
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return finished;
-    //return s_elevator.getLiftPosition() == targetPos || settlingTime.get() >= 2.0;+
+    return false;
   }
 }

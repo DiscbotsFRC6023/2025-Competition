@@ -18,11 +18,6 @@ public class L4 extends SequentialCommandGroup {
   public L4(Elevator s_elevator, Manipulator s_manipulator, Wrist s_wrist) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
-    addCommands(new RunCommand(() -> s_wrist.setWristPos(17), s_wrist).alongWith(new WaitCommand(0.05).andThen(new setElevatorPOS(s_elevator, 1.6))));
-    //.withTimeout(0.3));
-    /* addCommands(
-      new setElevatorPOS(s_elevator, 0.35)
-      //.alongWith(new WaitCommand(2.5).andThen(new RunCommand(() -> s_wrist.setWristPos(17), s_wrist)).withTimeout(0.3).andThen(() -> s_wrist.stopAll(), s_wrist))
-    ); */    
+    addCommands(new RunCommand(() -> s_wrist.setWristPos(17), s_wrist).alongWith(new WaitCommand(0.05).andThen(new setElevatorPOS(s_elevator, 1.6))));   
   }
 }
