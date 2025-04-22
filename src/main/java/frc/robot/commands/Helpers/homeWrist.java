@@ -28,10 +28,10 @@ public class homeWrist extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    if(s_wrist.getWristPosInDegrees() <= 17.0 && s_wrist.getWristPosInDegrees() >= 15.5){
+    if(s_wrist.getWristPosInDegrees() <= 16.0){
       finished = true;
     } else {
-      s_wrist.setWristPos(17.0);
+      s_wrist.setWristPos(15.0);
     }
   }
 

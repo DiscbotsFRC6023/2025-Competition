@@ -80,10 +80,6 @@ public class Elevator extends SubsystemBase {
     elevatorMotorOne.set(speed);
   }
 
-  public void hold(){
-    elevatorMotorOne.set(Constants.Elevator.kG);  //Hold voltage for elevator
-  }
-
   public void stopAll(){
     elevatorMotorOne.stopMotor();
     elevatorMotorTwo.stopMotor();

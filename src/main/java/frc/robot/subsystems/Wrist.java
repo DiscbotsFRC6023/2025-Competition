@@ -31,6 +31,7 @@ public class Wrist extends SubsystemBase {
     // This method will be called once per scheduler run
     SmartDashboard.putNumber("ABS ENC DEG", getWristPosInDegrees());
     SmartDashboard.putBoolean("ENC CONNECTED:", wristEncoder.isConnected());
+    SmartDashboard.putNumber("WRIST RAW", wristEncoder.get());
   }
 
   public double getWristPos(){

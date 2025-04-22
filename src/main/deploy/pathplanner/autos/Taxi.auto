@@ -7,19 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Middle L3"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "L3"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Home"
+            "pathName": "Taxi"
           }
         }
       ]

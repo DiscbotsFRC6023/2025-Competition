@@ -19,6 +19,6 @@ public class Home extends SequentialCommandGroup {
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(new homeWrist(s_wrist));
     addCommands(new RunCommand(() -> s_elevator.homeElevator(), s_elevator).withTimeout(0.8));    
-    addCommands(new RunCommand(() -> s_wrist.setWristPos(1.5), s_wrist).withTimeout(3.0));
+    addCommands(new RunCommand(() -> s_wrist.setWristPos(0.5), s_wrist));
   }
 }

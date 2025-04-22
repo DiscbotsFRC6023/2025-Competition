@@ -5,8 +5,6 @@
 package frc.robot.commands.Vision;
 
 import java.util.ArrayList;
-import java.util.Optional;
-
 import org.photonvision.targeting.PhotonTrackedTarget;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Transform3d;
@@ -17,9 +15,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.*;
 import edu.wpi.first.wpilibj2.command.Command;
 
-public class AlignToReef extends Command {
+public class AutoAlignToReef extends Command {
   private PIDController xController, yController, rotController;
-  private Optional<Boolean> isRightScore = Optional.empty();
+  private boolean isRightScore;
   private CommandSwerveDrivetrain s_swerve;
   private Vision s_vision;
   private int tagID = -1;
@@ -34,8 +32,8 @@ public class AlignToReef extends Command {
   private double LEFT_Y_SETPOINT_REEF_ALIGNMENT = -0.32; //-0.3
   private double RIGHT_Y_SETPOINT_REEF_ALIGNMENT = 0.04;
 
-  public AlignToReef(boolean isRightScore, CommandSwerveDrivetrain s_swerve, Vision s_vision) {
-    this.isRightScore = Optional.of(isRightScore);
+  public AutoAlignToReef(boolean isRightScore, CommandSwerveDrivetrain s_swerve, Vision s_vision) {
+    this.isRightScore = isRightScore;
     this.s_swerve = s_swerve;
     this.s_vision = s_vision;
     addRequirements(s_swerve, s_vision);
@@ -45,7 +43,7 @@ public class AlignToReef extends Command {
     rotController = new PIDController(ROT_REEF_ALIGNMENT_P, 0, 0);
   }
 
-  public AlignToReef(double manualOffset, CommandSwerveDrivetrain s_swerve, Vision s_vision) {
+  public AutoAlignToReef(double manualOffset, CommandSwerveDrivetrain s_swerve, Vision s_vision) {
     this.s_swerve = s_swerve;
     this.s_vision = s_vision;
     this.manualOffset = manualOffset;
@@ -82,12 +80,12 @@ public class AlignToReef extends Command {
       tagID = initialTarget.fiducialId;
     }
 
-    if(isRightScore.isEmpty()){
-      yController.setSetpoint(manualOffset);
-    } else if(isRightScore.get()){
+    if(isRightScore){
       yController.setSetpoint(RIGHT_Y_SETPOINT_REEF_ALIGNMENT);
-    } else if(!isRightScore.get()){
+    } else if(!isRightScore){
       yController.setSetpoint(LEFT_Y_SETPOINT_REEF_ALIGNMENT);
+    } else {
+      yController.setSetpoint(manualOffset);
     }
 
     xController.setSetpoint(0.32);
@@ -98,6 +96,8 @@ public class AlignToReef extends Command {
     // Not working
     rotController.setSetpoint(-151); //2.57
     rotController.setTolerance(0.1);
+
+    SmartDashboard.putNumber("INIT TAG SETPOINT", initialTarget.getBestCameraToTarget().getRotation().toRotation2d().getDegrees());
   }
 
   @Override
@@ -105,7 +105,7 @@ public class AlignToReef extends Command {
     if(s_vision.leftHasTarget()){
       PhotonTrackedTarget target = s_vision.getLeftTarget();
       if(tagID == target.fiducialId){
-        System.out.println("Y Setpoint " + yController.getSetpoint());
+        System.out.println("SEEING TAG " + target.getFiducialId());
         Transform3d tagInput = target.getBestCameraToTarget();
         SmartDashboard.putNumber("TAG VAL", tagInput.getRotation().toRotation2d().getDegrees());
 
@@ -126,6 +126,6 @@ public class AlignToReef extends Command {
 
   @Override
   public boolean isFinished() {
-    return false;
+    return yController.atSetpoint();
   }
 }

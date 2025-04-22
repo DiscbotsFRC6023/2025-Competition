@@ -17,7 +17,7 @@ public class Barge extends SequentialCommandGroup {
   public Barge(Elevator s_elevator, Manipulator s_manipulator, Wrist s_wrist) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
-    addCommands(new setElevatorPOS(s_elevator, 1.85).withTimeout(2.0));
+    addCommands(new setElevatorPOS(s_elevator, 1.85).withTimeout(1.2));
     addCommands(new RunCommand(() -> s_wrist.setWristPos(55), s_wrist));
   }
 }

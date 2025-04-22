@@ -14,12 +14,10 @@ public class Manipulator extends SubsystemBase {
   /** Creates a new Manipulator. */
   private final TalonFX manipulatorMotor;
   private DigitalInput coralSensor;
-  private DigitalInput algaeSensor;
 
   public Manipulator() {
     manipulatorMotor = new TalonFX(Constants.Manipulator.MAN_CANID);
     coralSensor = new DigitalInput(Constants.Manipulator.CORAL_SENSOR_PORT);
-    algaeSensor = new DigitalInput(Constants.Manipulator.ALGAE_SENSOR_PORT);
     manipulatorMotor.getConfigurator().apply(Constants.Manipulator.MANIPULATOR_CONFIG);
   }
 
@@ -27,10 +25,6 @@ public class Manipulator extends SubsystemBase {
   public void periodic() {
     // This method will be called once per scheduler run
     SmartDashboard.putBoolean("Coral Present:", this.getCoralSensor());
-  }
-
-  public boolean getAlgaeSensor(){
-    return algaeSensor.get();
   }
 
   public boolean getCoralSensor(){
@@ -47,6 +41,10 @@ public class Manipulator extends SubsystemBase {
 
   public void intakeAlgae(){
     manipulatorMotor.set(Constants.Manipulator.ALGAE_INTAKE_SPEED);
+  }
+
+  public void throwup(){
+    manipulatorMotor.set(0.15);
   }
 
   public void intakeAlgae(double speed){

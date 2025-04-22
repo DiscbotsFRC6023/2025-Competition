@@ -2,8 +2,12 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.function.Supplier;
+
+import org.json.simple.parser.ParseException;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
@@ -12,8 +16,12 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.util.DriveFeedforwards;
+import com.pathplanner.lib.util.FileVersionException;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -28,6 +36,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
@@ -54,10 +63,75 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
     private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
 
+    private final SwerveRequest.ApplyRobotSpeeds pathplannerSpeeds = new SwerveRequest.ApplyRobotSpeeds();
+
     private final Vision s_vision = new Vision();
-    private Optional<Pose2d> estimatedVisionPose;
+    private ArrayList<Optional<Pose2d>> estimatedVisionPose;
 
     private final Field2d field = new Field2d();
+
+    private static final double FIELD_WIDTH = 16.45; // 2025 field width in meters
+
+    public static Pose2d getStartingPose(String pathName) {
+        // Load the starting pose from PathPlanner
+        PathPlannerPath path;
+        try {
+            path = PathPlannerPath.fromPathFile(pathName);
+            Pose2d startPose = path.getStartingHolonomicPose().get();
+
+            // Check alliance and mirror the pose if needed
+            if (DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
+                return mirrorPoseForRed(startPose);
+            }
+            return startPose;
+        } catch (FileVersionException | IOException | ParseException e){
+            e.printStackTrace();
+        }
+        return new Pose2d();
+    }
+
+    private static Pose2d mirrorPoseForRed(Pose2d pose) {
+        return new Pose2d(
+            FIELD_WIDTH - pose.getX(),  // Mirror X across field center
+            pose.getY(),                // Y stays the same
+            pose.getRotation().plus(Rotation2d.fromDegrees(180)) // Rotate 180°
+        );
+    }
+
+    public Command followPathCommand(PathPlannerPath path) {
+    try{
+        return new FollowPathCommand(
+                path,
+                this::getPose, // Robot pose supplier
+                this::getRobotRelativeSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+                (speeds, feedforwards) -> setControl(
+                    pathplannerSpeeds.withSpeeds(speeds)
+                        .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
+                        .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())
+                ), // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds, AND feedforwards
+                new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
+                        new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
+                        new PIDConstants(5.0, 0.0, 0.0) // Rotation PID constants
+                ),
+                Constants.Pathplanner.config, // The robot configuration
+                () -> {
+                  // Boolean supplier that controls when the path will be mirrored for the red alliance
+                  // This will flip the path being followed to the red side of the field.
+                  // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+
+                  var alliance = DriverStation.getAlliance();
+                  if (alliance.isPresent()) {
+                    return alliance.get() == DriverStation.Alliance.Red;
+                  }
+                  return false;
+                },
+                this // Reference to this subsystem to set requirements
+        );
+    } catch (Exception e) {
+        DriverStation.reportError("Big oops: " + e.getMessage(), e.getStackTrace());
+        return Commands.none();
+    }
+  }
 
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
@@ -148,9 +222,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 this::getPose, // Robot pose supplier
                 this::resetPose, // Method to reset odometry (will be called if your auto has a starting pose)
                 this::getRobotRelativeSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-                (speeds, feedforwards) -> driveRobotRelative(speeds), // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
+                (speeds, feedforwards) -> this.driveRobotRelative(speeds), // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
                 new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
-                        new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
+                        new PIDConstants(5.5, 13.0, 0.0), // Translation PID constants
                         new PIDConstants(5.0, 0.0, 0.0) // Rotation PID constants
                 ),
                 Constants.Pathplanner.config, // The robot configuration
@@ -169,6 +243,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         );
         
         SmartDashboard.putData("Field", field);
+        field.setRobotPose(getStartingPose("New Auto"));
     }
 
     public Pose2d getPose(){
@@ -183,11 +258,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         SwerveRequest.RobotCentric autonRequest = new SwerveRequest.RobotCentric();
 
         autonRequest = autonRequest
-        .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
+        .withDriveRequestType(DriveRequestType.Velocity)
         .withVelocityX(speeds.vxMetersPerSecond)
         .withVelocityY(speeds.vyMetersPerSecond)
         .withRotationalRate(speeds.omegaRadiansPerSecond);
-
 
         this.setControl(autonRequest);
     }
@@ -301,8 +375,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         }
 
         estimatedVisionPose = s_vision.getEstimatedGlobalPose(getPose());
-        if(estimatedVisionPose.isPresent()){
-            this.addVisionMeasurement(estimatedVisionPose.get(), s_vision.poseTimestamp);
+        if(estimatedVisionPose.size() == 2){
+            //this.addVisionMeasurement(estimatedVisionPose.get(0).get(), s_vision.poseTimestampOne, s_vision.getstdDevs());
+            //this.addVisionMeasurement(estimatedVisionPose.get(1).get(), s_vision.poseTimestampTwo, s_vision.getstdDevs());
+        } else if(!estimatedVisionPose.isEmpty()){
+            /* This is veryyyyyyy sketchy because we are pulling the only pose available but using one variable 
+             * for either a left camera pose or a right camera pose
+             */
+            //this.addVisionMeasurement(estimatedVisionPose.get(0).get(), s_vision.poseTimestampOne, s_vision.getstdDevs());
         }
 
         field.setRobotPose(getPose());

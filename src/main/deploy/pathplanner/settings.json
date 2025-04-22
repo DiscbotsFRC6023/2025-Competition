@@ -1,20 +1,22 @@
 {
-  "robotWidth": 0.914,
-  "robotLength": 0.9144,
+  "robotWidth": 0.902,
+  "robotLength": 0.9017,
   "holonomicMode": true,
-  "pathFolders": [],
+  "pathFolders": [
+    "Side 2"
+  ],
   "autoFolders": [],
   "defaultMaxVel": 3.0,
   "defaultMaxAccel": 3.0,
   "defaultMaxAngVel": 540.0,
   "defaultMaxAngAccel": 720.0,
   "defaultNominalVoltage": 12.0,
-  "robotMass": 56.699,
-  "robotMOI": 6.0,
+  "robotMass": 54.4311,
+  "robotMOI": 4.7539,
   "robotTrackwidth": 0.546,
-  "driveWheelRadius": 0.048,
+  "driveWheelRadius": 0.0508,
   "driveGearing": 6.12,
-  "maxDriveSpeed": 5.45,
+  "maxDriveSpeed": 4.515,
   "driveMotorType": "falcon500",
   "driveCurrentLimit": 60.0,
   "wheelCOF": 1.2,
@@ -28,5 +30,7 @@
   "brModuleY": -0.292,
   "bumperOffsetX": 0.0,
   "bumperOffsetY": 0.0,
-  "robotFeatures": []
+  "robotFeatures": [
+    "{\"name\":\"Rectangle\",\"type\":\"rounded_rect\",\"data\":{\"center\":{\"x\":0.457,\"y\":0.0},\"size\":{\"width\":0.133,\"length\":0.114},\"borderRadius\":0.05,\"strokeWidth\":0.02,\"filled\":true}}"
+  ]
 }

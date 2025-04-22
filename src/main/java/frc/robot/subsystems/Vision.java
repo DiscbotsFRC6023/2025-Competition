@@ -6,13 +6,21 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+import static edu.wpi.first.units.Units.Centimeters;
+
+import java.util.ArrayList;
 import java.util.Optional;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
@@ -27,22 +35,24 @@ public class Vision extends SubsystemBase {
   private final PhotonCamera rightArducam;
 
   private Transform3d leftToRobot = new Transform3d(
-    new Translation3d(-19.05, 30.48, 15.95), 
-    new Rotation3d(Math.toRadians(0.0), Math.toRadians(15.0), Math.toRadians(-22.5))  //FIXME switch to radians
+    new Translation3d(Centimeters.of(-19.05), Centimeters.of(30.48), Centimeters.of(15.95)), 
+    new Rotation3d(Math.toRadians(0.0), Math.toRadians(15.0), Math.toRadians(-22.5))
   );
 
   private Transform3d rightToRobot = new Transform3d(
-    new Translation3d(19.05, 30.48, 15.95), 
-    new Rotation3d(Math.toRadians(0.0), Math.toRadians(15.0), Math.toRadians(-22.5))  //FIXME switch to radians
+    new Translation3d(Centimeters.of(19.05), Centimeters.of(30.48), Centimeters.of(15.95)), 
+    new Rotation3d(Math.toRadians(0.0), Math.toRadians(15.0), Math.toRadians(22.5))
   );
 
   private PhotonPipelineResult latestLeftResult;
   private PhotonPipelineResult latestRightResult;
+  private Matrix<N3, N1> visionStdDevs = VecBuilder.fill(0.8, 0.8, 0.8); // X, Y, and θ (radians)
 
   // Camera Pose estimators:
   private PhotonPoseEstimator leftPoseEstimator;
   private PhotonPoseEstimator rightPoseEstimator;
-  public double poseTimestamp = 0.00;
+  public double poseTimestampOne = 0.00;
+  public double poseTimestampTwo = 0.00;
 
   public boolean hasTarget = false;
 
@@ -74,13 +84,6 @@ public class Vision extends SubsystemBase {
     hasTarget = this.hasTarget();
   }
 
-  public PhotonTrackedTarget getBestTarget(){
-    if(hasTarget){
-      return latestLeftResult.getBestTarget();
-    }
-    return new PhotonTrackedTarget();
-  }
-
   public boolean leftHasTarget(){
     return leftArducam.getLatestResult().hasTargets();
   }
@@ -89,6 +92,12 @@ public class Vision extends SubsystemBase {
     return rightArducam.getLatestResult().hasTargets();
   }
 
+  public PhotonTrackedTarget getLeftTarget(){
+    if(leftHasTarget()){
+      return leftArducam.getLatestResult().getBestTarget();
+    }
+    return new PhotonTrackedTarget();
+  }
   public double getLeftX(int targetID){
         var latestResult = leftArducam.getLatestResult();
         if (latestResult.hasTargets()) {
@@ -155,34 +164,47 @@ public double getRightY(int targetID){
     return leftHasTarget() || rightHasTarget();
   }
 
-  public Optional<Pose2d> getEstimatedGlobalPose(Pose2d previousEstimatedRobotPose){
+  public Matrix<N3, N1> getstdDevs(){
+    return visionStdDevs;
+  }
+
+  public ArrayList<Optional<Pose2d>> getEstimatedGlobalPose(Pose2d previousEstimatedRobotPose){
     PhotonPipelineResult leftResult = leftArducam.getLatestResult();
     PhotonPipelineResult rightResult = rightArducam.getLatestResult();
-    
+
+    ArrayList<Optional<Pose2d>> resultList = new ArrayList<Optional<Pose2d>>();
+
     // Setting reference pose
     leftPoseEstimator.setReferencePose(previousEstimatedRobotPose);
     rightPoseEstimator.setReferencePose(previousEstimatedRobotPose);
 
     // Get pose estimates of all cameras
     Optional<EstimatedRobotPose> pose1 = leftPoseEstimator.update(leftResult);
-    Optional<EstimatedRobotPose> pose2 = leftPoseEstimator.update(rightResult);
+    Optional<EstimatedRobotPose> pose2 = rightPoseEstimator.update(rightResult);
 
-    if(pose1.isPresent() && pose2.isPresent()){ // Using both by avg
-      Pose2d avgPose = new Pose2d(
-        pose1.get().estimatedPose.toPose2d().getTranslation()
-        .plus(pose2.get().estimatedPose.toPose2d().getTranslation()).div(2),
-        pose1.get().estimatedPose.toPose2d().getRotation()
-      );
-      poseTimestamp = pose1.get().timestampSeconds;
-      //return Optional.of(avgPose);
+    if(pose1.isPresent() && pose2.isPresent()){ // Using both
+      poseTimestampOne = pose1.get().timestampSeconds;
+      poseTimestampTwo = pose2.get().timestampSeconds;
+      resultList.add(Optional.of(pose1.get().estimatedPose.toPose2d()));
+      resultList.add(Optional.of(pose2.get().estimatedPose.toPose2d()));
+
+      return resultList;
+
     } else if(pose1.isPresent()){ // Just pose 1
-      poseTimestamp = pose1.get().timestampSeconds;
-      return Optional.of(pose1.get().estimatedPose.toPose2d());
+      
+      poseTimestampOne = pose1.get().timestampSeconds;
+      resultList.add(Optional.of(pose1.get().estimatedPose.toPose2d()));
+
+      return resultList;
+    
     } else if(pose2.isPresent()){ // Just pose 2
-      poseTimestamp = pose2.get().timestampSeconds;
-      return Optional.of(pose2.get().estimatedPose.toPose2d());
+      poseTimestampOne = pose2.get().timestampSeconds;
+      resultList.add(Optional.of(pose2.get().estimatedPose.toPose2d()));
+      
+      return resultList;
+
     }
 
-    return Optional.empty();
+    return resultList;
   }
 }

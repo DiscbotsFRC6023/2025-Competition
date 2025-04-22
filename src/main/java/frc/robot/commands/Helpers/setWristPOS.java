@@ -37,7 +37,7 @@ public class setWristPOS extends Command {
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    s_wrist.stopAll();
+    s_wrist.setWristPos(targetPos);
   }
 
   // Returns true when the command should end.
