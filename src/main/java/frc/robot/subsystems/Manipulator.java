@@ -9,22 +9,26 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.RobotStates;
 
 public class Manipulator extends SubsystemBase {
   /** Creates a new Manipulator. */
   private final TalonFX manipulatorMotor;
   private DigitalInput coralSensor;
+  private RobotStates sharedStates;
 
-  public Manipulator() {
+  public Manipulator(RobotStates sharedStates){
     manipulatorMotor = new TalonFX(Constants.Manipulator.MAN_CANID);
     coralSensor = new DigitalInput(Constants.Manipulator.CORAL_SENSOR_PORT);
     manipulatorMotor.getConfigurator().apply(Constants.Manipulator.MANIPULATOR_CONFIG);
+    this.sharedStates = sharedStates;
   }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
     SmartDashboard.putBoolean("Coral Present:", this.getCoralSensor());
+    sharedStates.hasCoral = this.getCoralSensor();
   }
 
   public boolean getCoralSensor(){

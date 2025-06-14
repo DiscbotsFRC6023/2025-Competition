@@ -13,7 +13,7 @@ public class HomeCoral extends Command {
   Manipulator s_manipulator;
   boolean finished = false;
 
-  /** Creates a new IntakeCoral. */
+  /** Creates a new HomeCoral. */
   public HomeCoral(Manipulator s_manipulator) {
     // Use addRequirements() here to declare subsystem dependencies.
     this.s_manipulator = s_manipulator;

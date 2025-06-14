@@ -40,6 +40,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
+import frc.robot.RobotStates;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 
 /**
@@ -64,8 +65,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
 
     private final SwerveRequest.ApplyRobotSpeeds pathplannerSpeeds = new SwerveRequest.ApplyRobotSpeeds();
+    private RobotStates sharedStates;
 
-    private final Vision s_vision = new Vision();
+    private final Vision s_vision = new Vision(sharedStates);
     private ArrayList<Optional<Pose2d>> estimatedVisionPose;
 
     private final Field2d field = new Field2d();
@@ -210,6 +212,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     // IMPLEMENTING PATHPLANNER FOR THIS CONSTRUCTORRRRRRRRRRRRRRR:
     public CommandSwerveDrivetrain(
         SwerveDrivetrainConstants drivetrainConstants,
+        RobotStates sharedStates,
         SwerveModuleConstants<?, ?, ?>... modules
     ) {
         super(drivetrainConstants, modules);
@@ -244,6 +247,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         
         SmartDashboard.putData("Field", field);
         field.setRobotPose(getStartingPose("New Auto"));
+        this.sharedStates = sharedStates;
     }
 
     public Pose2d getPose(){

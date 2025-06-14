@@ -4,10 +4,9 @@
 
 package frc.robot.commands.Sequentials;
 
-import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
-import frc.robot.commands.Helpers.setElevatorPOS;
+import frc.robot.Constants;
 import frc.robot.subsystems.*;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
@@ -20,10 +19,11 @@ public class CoralDeAlg extends SequentialCommandGroup {
     // addCommands(new FooCommand(), new BarCommand());
 
     if(isHighAlgae){
-      addCommands(new RunCommand(() -> s_wrist.setWristPos(160), s_wrist).alongWith(new WaitCommand(0.05).andThen(new setElevatorPOS(s_elevator, 1.06))));
+      addCommands(new InstantCommand(() -> s_wrist.setWristPos(Constants.Wrist.algaeDegrees)));
+      addCommands(new InstantCommand( () -> s_elevator.setElevatorPos(1.06)));
     } else {
-      addCommands(new RunCommand(() -> s_wrist.setWristPos(145), s_wrist).alongWith(new WaitCommand(0.05).andThen(new setElevatorPOS(s_elevator, 0.54))));
-
+      addCommands(new InstantCommand(() -> s_wrist.setWristPos(Constants.Wrist.algaeDegrees)));
+      addCommands(new InstantCommand( () -> s_elevator.setElevatorPos(0.54)));
     }
   }
 }

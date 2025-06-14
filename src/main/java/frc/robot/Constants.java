@@ -36,6 +36,18 @@ public final class Constants {
         public static final double kV = 15.0;    // known velocity / voltage used
         public static final double kA = 0.0;
 
+        public static final double homePosition = 0.00; //0.005
+        public static final double algaeHomePosition = 0.04;
+        public static final double L1 = 0.0;
+        public static final double L2 = 0.35;
+        public static final double L3 = 0.79;
+        public static final double L4 = 1.6;
+
+        public static final double lowAlgaePosition = 0.57;
+        public static final double highAlgaePosition = 1.06;
+        public static final double processorPosition = 0.04;
+        public static final double bargePosition = 1.82;
+
         static{
             LEFT_CONFIG
                 .smartCurrentLimit(MAX_CURRENT_LIMIT)
@@ -84,6 +96,14 @@ public final class Constants {
         public static final double kI = 0.000;
         public static final double kD = 0.0001;
         public static final double errTolerance = 0.0;
+
+        //FIXME: Change these to match the actual robot
+        public static final double homeDegrees = 0.5;
+        public static final double scoreDegrees = 17.0;
+        public static final double algaeDegrees = 160.0;
+        public static final double bargeDegrees = 55.0;
+        public static final double travelDegrees = 19.0;
+        public static final double L4Degrees = 35.0;
 
         public static final TalonFXConfiguration WRIST_CONFIG = new TalonFXConfiguration();
 

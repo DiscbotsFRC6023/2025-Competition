@@ -4,20 +4,22 @@
 
 package frc.robot.commands.Sequentials;
 
-import frc.robot.commands.Helpers.setElevatorPOS;
+import frc.robot.Constants;
 import frc.robot.subsystems.*;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
 public class L1Algae extends SequentialCommandGroup {
-  /** Creates a new L1Coral. */
+  /** Creates a new L1Algae. */
   public L1Algae(Elevator s_elevator, Manipulator s_manipulator, Wrist s_wrist) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
-    addCommands(new RunCommand(() -> s_wrist.setWristPos(160), s_wrist).alongWith(new WaitCommand(0.05).andThen(new setElevatorPOS(s_elevator, 0.57)).alongWith(new RunCommand(() -> s_manipulator.holdBall(), s_manipulator))));
+    addCommands(new InstantCommand(() -> s_wrist.setWristPos(Constants.Wrist.algaeDegrees)));
+    addCommands(new InstantCommand( () -> s_elevator.setElevatorPos(Constants.Elevator.lowAlgaePosition)));
+    addCommands(new RunCommand(() -> s_manipulator.holdBall(), s_manipulator));
   }
 }

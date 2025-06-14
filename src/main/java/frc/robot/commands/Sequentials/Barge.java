@@ -4,9 +4,9 @@
 
 package frc.robot.commands.Sequentials;
 
-import frc.robot.commands.Helpers.setElevatorPOS;
+import frc.robot.Constants;
 import frc.robot.subsystems.*;
-import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
@@ -17,7 +17,8 @@ public class Barge extends SequentialCommandGroup {
   public Barge(Elevator s_elevator, Manipulator s_manipulator, Wrist s_wrist) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
-    addCommands(new setElevatorPOS(s_elevator, 1.85).withTimeout(1.2));
-    addCommands(new RunCommand(() -> s_wrist.setWristPos(55), s_wrist));
+    addCommands(new InstantCommand( () -> s_elevator.setElevatorPos(Constants.Elevator.bargePosition)));
+    addCommands(new InstantCommand(() -> s_wrist.setWristPos(Constants.Wrist.bargeDegrees)));
+
   }
 }

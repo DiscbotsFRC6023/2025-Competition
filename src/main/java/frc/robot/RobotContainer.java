@@ -38,11 +38,12 @@ public class RobotContainer {
     public static SendableChooser<Command> autonChooser;
 
 
-    private Manipulator s_manipulator = new Manipulator();
-    private Elevator s_elevator = new Elevator();
-    private Wrist s_wrist = new Wrist();
-    private Vision s_vision = new Vision();
-    public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+    private RobotStates sharedStates = new RobotStates();
+    private Manipulator s_manipulator = new Manipulator(sharedStates);
+    private Elevator s_elevator = new Elevator(sharedStates);
+    private Wrist s_wrist = new Wrist(sharedStates);
+    private Vision s_vision = new Vision(sharedStates);
+    public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain(sharedStates);
 
     private JoystickButton a = new JoystickButton(controller, XboxController.Button.kA.value);
     private JoystickButton x = new JoystickButton(controller, XboxController.Button.kX.value);
@@ -111,7 +112,8 @@ public class RobotContainer {
           }));
           score.onFalse(new InstantCommand(() -> s_manipulator.stopAll(), s_manipulator));
       
-          home.onTrue(new Home(s_elevator, s_manipulator, s_wrist));
+          home.onTrue(new Home(s_elevator, s_wrist));
+
           algaeHome.onTrue(new AlgaeHome(s_elevator, s_manipulator, s_wrist));
           ScoreDeAlg.onTrue(new CoralDeAlg(s_elevator, s_manipulator, s_wrist, true));
           ScoreDeAlg2.onTrue(new CoralDeAlg(s_elevator, s_manipulator, s_wrist, false));
@@ -133,6 +135,8 @@ public class RobotContainer {
                     .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
+
+        //s_elevator.setDefaultCommand(new RunCommand(() -> s_elevator.manualLift(controller.getRightY()), s_elevator));
 
         // Swerve Brake:
         joystick.y().whileTrue(drivetrain.applyRequest(() -> brake));
@@ -163,7 +167,7 @@ public class RobotContainer {
     }
 
     void registerCommands(){
-      NamedCommands.registerCommand("Home", new Home(s_elevator, s_manipulator, s_wrist));
+      NamedCommands.registerCommand("Home", new Home(s_elevator, s_wrist));
       NamedCommands.registerCommand("L4", new AutoL4(s_elevator, s_manipulator, s_wrist));
       NamedCommands.registerCommand("L1Algae", new L1Algae(s_elevator, s_manipulator, s_wrist));
       NamedCommands.registerCommand("Left Reef Align", new AutoAlignToReef(false, drivetrain, s_vision));

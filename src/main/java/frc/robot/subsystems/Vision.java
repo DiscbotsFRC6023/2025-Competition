@@ -17,6 +17,7 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.RobotStates;
 
 import static edu.wpi.first.units.Units.Centimeters;
 
@@ -33,6 +34,7 @@ public class Vision extends SubsystemBase {
   /** Creates a new Vision. */
   private final PhotonCamera leftArducam;
   private final PhotonCamera rightArducam;
+  private final RobotStates sharedStates;
 
   private Transform3d leftToRobot = new Transform3d(
     new Translation3d(Centimeters.of(-19.05), Centimeters.of(30.48), Centimeters.of(15.95)), 
@@ -56,7 +58,7 @@ public class Vision extends SubsystemBase {
 
   public boolean hasTarget = false;
 
-  public Vision() {
+  public Vision(RobotStates sharedStates) {
     leftArducam = new PhotonCamera("Left_Arducam");
     rightArducam = new PhotonCamera("Right_Arducam");
 
@@ -75,6 +77,7 @@ public class Vision extends SubsystemBase {
     // Setup Network Tables:
     NetworkTableInstance ntInstance = NetworkTableInstance.getDefault();
     NetworkTable poseTable = ntInstance.getTable("PoseData");
+    this.sharedStates = sharedStates;
   }
 
   @Override
